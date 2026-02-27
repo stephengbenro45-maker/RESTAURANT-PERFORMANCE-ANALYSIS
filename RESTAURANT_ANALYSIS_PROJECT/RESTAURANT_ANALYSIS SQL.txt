@@ -1,0 +1,177 @@
+SELECT * FROM salesr;
+SELECT * FROM expenses;
+select * from inventoryr;
+select * from menu_cost;
+select * from staff;
+
+     with revenue_cte as (
+       select 
+          date(date) as sales_date, 
+          sum(salesr.quantity * salesr.selling_price) as Total_revenue 
+          from salesr 
+          group by date(date) 
+          ) select * from revenue_cte;
+          
+            select 
+          date(date) as sales_date, 
+          sum(salesr.quantity * salesr.selling_price) as Total_revenue 
+          from salesr 
+          group by date(date);
+          
+          
+          
+          
+          
+          select 
+          salesr.item_name,
+            sum(salesr.quantity * salesr.selling_price) as Total_revenue
+            from salesr
+            group by salesr.item_name
+            order by Total_revenue desc limit 5;
+            
+            
+            with item_revenue as ( 
+            select salesr.item_name,
+            sum(salesr.quantity * salesr.selling_price) as Total_revenue
+            from salesr
+            group by salesr.item_name )
+             select * from item_revenue
+             order by Total_revenue desc limit 5;
+             
+			
+             
+             
+             select salesr.item_name,
+                sum(salesr.quantity * salesr.selling_price) as Total_revenue,
+                sum(salesr.quantity * menu_cost.cost_price) as cost_price  
+                from salesr 
+                join menu_cost on salesr.item_name=menu_cost.item_name
+                group by item_name;
+             
+             with item_gross as (
+             select salesr.item_name,
+                sum(salesr.quantity * salesr.selling_price) as Total_revenue,
+                sum(salesr.quantity * menu_cost.cost_price) as Total_cost  
+                from salesr 
+                join menu_cost on salesr.item_name=menu_cost.item_name
+                group by item_name )
+                select *,
+                Total_revenue - Total_cost as gross_profit 
+                from item_gross 
+                order by Total_revenue desc limit 5;
+                
+                
+                select salesr.item_name,
+                sum(salesr.quantity * salesr.selling_price) as Total_revenue,
+                sum(salesr.quantity * menu_cost.cost_price) as Total_cost, 
+                sum(salesr.quantity * salesr.selling_price) 
+                -  sum(salesr.quantity * menu_cost.cost_price) as gross_profit 
+                from salesr 
+                join menu_cost on salesr.item_name=menu_cost.item_name
+                group by item_name 
+                order by Total_revenue desc limit 5;
+                
+                
+                
+                select salesr.item_name,
+                sum(salesr.quantity * salesr.selling_price) as Total_revenue,
+                sum(salesr.quantity * menu_cost.cost_price) as Total_cost, 
+                ((sum(salesr.quantity * salesr.selling_price) 
+                -  sum(salesr.quantity * menu_cost.cost_price)) 
+                / sum(salesr.quantity * salesr.selling_price))
+                *100 as profit_percentage
+                from salesr 
+                join menu_cost on salesr.item_name=menu_cost.item_name
+                group by item_name 
+                order by Total_revenue desc limit 5;
+                
+                
+                with profit_stat as ( 
+                select salesr.item_name,
+                 sum(salesr.quantity * salesr.selling_price) as Total_revenue,
+                sum(salesr.quantity * menu_cost.cost_price) as Total_cost
+                from salesr
+                 join menu_cost on salesr.item_name=menu_cost.item_name
+                group by item_name 
+                  ) 
+                  select * ,
+                  Total_revenue - Total_cost / Total_revenue * 100 as profit_margin_percentage
+                  from profit_stat
+                  order by Total_revenue desc limit 5;
+                  
+                  select salesr.item_name,
+                  sum(salesr.quantity) as Total_quantity
+                  from salesr
+                  group by salesr.item_name;
+                  
+                  
+				select staff.staff_name,
+                shift_start - shift_end as hour_spent
+                from staff;
+                
+                
+                select 
+                expenses.expense_type,
+                sum(expenses.amount) as staff_salary
+                from expenses 
+                where expense_type = " staff salary" ;
+                
+                
+                select inventoryr.item_name,
+                 date(date) as sale_date,
+                 inventoryr.opening_stock - inventoryr.closing_stock 
+                 as stock_used
+                 from inventoryr;
+                 
+                 
+                 select distinct(staff.staff_id),
+                 staff.staff_name,
+                 salesr.item_name,
+                 date(date) as sales_date,
+                        sum(salesr.quantity)as quantity_sold
+                        from salesr
+                        join staff on salesr.staff_id=staff.staff_id
+                        group by staff.staff_id,
+                 staff.staff_name,
+                 salesr.item_name,date(date);
+                 
+                 
+				select staff.staff_name, 
+                sum(salesr.quantity) as quantity_sold 
+                from salesr
+                join staff on salesr.staff_id=staff.staff_id
+               group by staff.staff_name
+               order by quantity_sold desc;
+               
+               
+               with ITEM_GROSS as ( 
+                select salesr.item_name,
+                 sum(salesr.quantity * salesr.selling_price) as Total_revenue,
+                sum(salesr.quantity * menu_cost.cost_price) as Total_cost
+                from salesr
+                 join menu_cost on salesr.item_name=menu_cost.item_name
+                group by item_name )
+                SELECT *,
+                (Total_revenue - Total_cost) as gross_profit,
+                   round(((Total_revenue - Total_cost) / Total_revenue)
+                   * 100,2) as margin_percentage 
+                   from ITEM_GROSS 
+                   order by margin_percentage asc limit 10;
+               
+					 
+                 
+                 
+                  with ITEM_GROSS as ( 
+                select salesr.item_name,
+                 sum(salesr.quantity * salesr.selling_price) as Total_revenue,
+                sum(salesr.quantity * menu_cost.cost_price) as Total_cost
+                from salesr
+                 join menu_cost on salesr.item_name=menu_cost.item_name
+                group by item_name )
+                SELECT *,
+                (Total_revenue - Total_cost) as gross_profit,
+                   round(((Total_revenue - Total_cost) / Total_revenue)
+                   * 100,2) as margin_percentage,
+                   round(((Total_revenue - Total_cost) / Total_cost),2) as return_on_investment
+                   from ITEM_GROSS 
+                   order by margin_percentage asc limit 10;
